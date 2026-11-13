@@ -33,7 +33,7 @@ for f in \
     backup "$HOME/.config/${f#config/}"
 done
 
-for f in bluetooth-menu desktop-widget ws-sound brightness; do
+for f in bluetooth-menu wifi-menu desktop-widget ws-sound ws-sound-toggle clipboard-history screenshot brightness; do
     backup "$HOME/.local/bin/$f"
 done
 
@@ -57,7 +57,7 @@ cp -a "$DIR"/assets/wlogout-icons/*  ~/.local/share/wlogout/icons/
 # wlogout's CSS needs absolute icon paths; rewrite the placeholder
 sed -i "s|/home/USER/|$HOME/|g" ~/.config/wlogout/style.css
 
-chmod +x ~/.local/bin/{bluetooth-menu,desktop-widget,ws-sound,brightness} \
+chmod +x ~/.local/bin/{bluetooth-menu,wifi-menu,desktop-widget,ws-sound,ws-sound-toggle,clipboard-history,screenshot,brightness} \
          ~/.config/waybar/scripts/media.sh \
          ~/.config/eww/scripts/*.sh
 

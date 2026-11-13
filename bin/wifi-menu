@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# Wi-Fi manager for Hyprland: nmcli behind a wofi menu.
+# Toggle radio, connect saved networks, scan/join new ones
+# (with password prompt), disconnect, forget. Loops until closed.
+# Sister script to bluetooth-menu — same structure and look.
+
+set -uo pipefail
+
+WOFI_ARGS=(--dmenu --width 620 --lines 14)
+
+notify() { notify-send -a Wi-Fi -i network-wireless "$1" "${2:-}"; }
+
+wifi_on() { [[ $(nmcli -t -f WIFI radio) == enabled ]]; }
+
+wifi_dev() {  # first wireless device, empty if none
+    nmcli -t -f DEVICE,TYPE device 2>/dev/null \
+        | awk -F: '$2 == "wifi" { print $1; exit }'
+}
+
+active_ssid() {  # prints the ssid of the active wifi connection
+    local dev; dev=$(wifi_dev)
+    [[ -z $dev ]] && return 1
+    nmcli -g NAME,DEVICE connection show --active 2>/dev/null \
+        | awk -F: -v d="$dev" '$NF == d { sub(/:[^:]*$/, ""); print; exit }'
+}
+
+toggle() {
+    if wifi_on; then
+        nmcli radio wifi off >/dev/null && notify "Wi-Fi off"
+    else
+        nmcli radio wifi on >/dev/null && notify "Wi-Fi on"
+    fi
+}
+
+connect_saved() {  # $1 = ssid
+    if nmcli connection up id "$1" >/dev/null 2>&1; then
+        notify "Connected" "$1"
+    else
+        notify "Connection failed" "$1"
+    fi
+}
+
+disconnect() {
+    local dev; dev=$(wifi_dev)
+    [[ -n $dev ]] && nmcli device disconnect "$dev" >/dev/null 2>&1 && notify "Disconnected"
+}
+
+forget() {  # $1 = ssid
+    nmcli connection delete id "$1" >/dev/null 2>&1 && notify "Removed" "$1"
+}
+
+join_new() {  # scan + pick an access point, ask for password if secured
+    notify "Scanning" "Looking for networks…"
+    nmcli device wifi rescan 2>/dev/null; sleep 3
+
+    local dev; dev=$(wifi_dev)
+    [[ -z $dev ]] && { notify "No Wi-Fi device"; return; }
+
+    # SSID:SIGNAL:ACTIVE:SECURITY (g mode: colon-safe for these fields)
+    local rows
+    rows=$(nmcli -g SSID,SIGNAL,ACTIVE,SECURITY device wifi list ifname "$dev" 2>/dev/null \
+        | awk -F: 'length($1) > 0' | sort -t: -k2,2nr | sort -u -t: -k1,1)
+
+    [[ -n $rows ]] || { notify "Scan finished" "No networks found"; return; }
+
+    local entries=() ssids=() secs=() line ssid sig act sec entry
+    while IFS= read -r line; do
+        ssid=${line%%:*}; rest=${line#*:}
+        sig=${rest%%:*};  rest=${rest#*:}
+        act=${rest%%:*};  sec=${rest#*:}
+        entry="$ssid  ($sig%)"
+        [[ $act == yes ]] && entry+=" — connected"
+        entries+=("$entry"); ssids+=("$ssid"); secs+=("$sec")
+    done <<<"$rows"
+
+    local choice idx=-1 i
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}" --prompt "Join network") || return
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && return
+
+    local ssid=${ssids[idx]} sec=${secs[idx]}
+    local args=()
+    [[ $sec != "" && $sec != none ]] && {
+        local pass
+        pass=$(wofi "${WOFI_ARGS[@]}" --password --prompt "Password for $ssid" -L 1) || return
+        [[ -z $pass ]] && return
+        args+=(password "$pass")
+    }
+    notify "Connecting" "$ssid"
+    if nmcli device wifi connect "$ssid" ifname "$dev" "${args[@]}" >/dev/null 2>&1; then
+        notify "Connected" "$ssid"
+    else
+        notify "Connection failed" "$ssid"
+    fi
+}
+
+pick_saved() {  # header as $1; prints chosen ssid
+    local header=$1
+    local entries=() ssids=()
+    local active; active=$(active_ssid || true)
+    while IFS=: read -r name type; do
+        [[ $type == 802-11-wireless ]] || continue
+        local entry="$name"
+        [[ $name == "$active" ]] && entry+=" — connected"
+        entries+=("$entry"); ssids+=("$name")
+    done < <(nmcli -t -f NAME,TYPE connection show 2>/dev/null)
+
+    ((${#entries[@]})) || { notify "Nothing saved" "No Wi-Fi profiles yet"; return 1; }
+
+    local choice idx=-1 i
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}" --prompt "$header") || return 1
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && return 1
+    printf '%s\n' "${ssids[idx]}"
+}
+
+while :; do
+    entries=() cmds=()
+    local_active=$(active_ssid || true)
+
+    if wifi_on; then
+        entries+=("   Turn Wi-Fi off"); cmds+=("radio off")
+
+        if [[ -n $local_active ]]; then
+            entries+=("   $local_active — connected"); cmds+=("disc")
+        else
+            entries+=("   Not connected"); cmds+=("noop")
+        fi
+        entries+=("   Scan / join a network"); cmds+=("join")
+
+        while IFS=: read -r name type; do
+            [[ $type == 802-11-wireless ]] || continue
+            [[ $name == "$local_active" ]] && continue
+            entries+=("   $name"); cmds+=("conn:$name")
+        done < <(nmcli -t -f NAME,TYPE connection show 2>/dev/null)
+
+        entries+=("   Forget a network"); cmds+=("forget")
+    else
+        entries+=("   Turn Wi-Fi on"); cmds+=("radio on")
+    fi
+    entries+=("   Close"); cmds+=("exit")
+
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}" --prompt "Wi-Fi") || exit 0
+    [[ -z ${choice:-} ]] && exit 0
+
+    idx=-1
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && continue
+
+    cmd=${cmds[idx]}
+    case ${cmd%%:*} in
+        radio)  [[ ${cmd#*:} == on ]] && toggle || toggle ;;
+        join)   join_new ;;
+        conn)   connect_saved "${cmd#*:}" ;;
+        disc)   disconnect ;;
+        forget) n=$(pick_saved "Forget network") && forget "$n" ;;
+        exit)   exit 0 ;;
+        noop)   ;;
+    esac
+done

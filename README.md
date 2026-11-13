@@ -46,7 +46,7 @@ Bar geometry is based on the V4.y capsule layout from
 | Kitty | `config/kitty/` — terminal theme |
 | Eww | `config/eww/` — desktop HUD: clock, system stats, now playing, GitHub contributions calendar |
 | Starship | `config/starship.toml` — powerline prompt in the same palette |
-| Scripts | `bin/` — bluetooth menu, HUD toggler, workspace sound, brightness OSD |
+| Scripts | `bin/` — bluetooth + wifi menus, screenshot tool, clipboard history, HUD toggler, workspace sound, brightness OSD |
 
 Extra bits worth stealing:
 
@@ -83,9 +83,12 @@ Wallpapers are **not** included (not my work) — put one in
 | Key | Action |
 |---|---|
 | `SUPER+Q` / `E` / `R` | terminal / file manager / launcher |
-| `SUPER+B` | bluetooth menu |
+| `SUPER+B` / `SUPER+W` | bluetooth / wi-fi menu |
 | `SUPER+N` / `SUPER+SHIFT+N` | next / previous song |
 | `SUPER+SPACE` / `SUPER+SHIFT+SPACE` | play-pause / stop |
+| `SUPER+O` | toggle workspace-switch sound |
+| `Print` / `SHIFT+Print` / `SUPER+Print` | screenshot region / full / window |
+| `SUPER+SHIFT+V` | clipboard history picker |
 | `SUPER+C` / `V` / `F` / `P` / `J` | kill / float / fullscreen / pseudo / split |
 | `SUPER+M` / `SUPER+SHIFT+M` | power menu / exit |
 | `SUPER+L` | lock |

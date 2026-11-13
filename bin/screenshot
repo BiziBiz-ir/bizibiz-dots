@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Screenshots with grim + slurp.
+#   screenshot region    -> drag a region, copy + save
+#   screenshot full      -> whole output, copy + save
+#   screenshot window    -> focused window, copy + save
+#
+# NB: grim writes the file first, then wl-copy reads it. Piping straight into
+# wl-copy leaves the pipe open (it forks to serve the clipboard) and any shell
+# waiting on the pipeline hangs.
+
+set -uo pipefail
+
+dir="$HOME/Pictures/Screenshots"
+mkdir -p "$dir"
+stamp=$(date +%Y%m%d-%H%M%S)
+mode="${1:-region}"
+file="$dir/${stamp}_${mode}.png"
+
+case "$mode" in
+    region)
+        geom=$(slurp) || exit 0
+        grim -g "$geom" "$file" || exit 1
+        ;;
+    full)
+        grim "$file" || exit 1
+        ;;
+    window)
+        geom=$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
+        [[ -z $geom || $geom == "null" ]] && exit 0
+        grim -g "$geom" "$file" || exit 1
+        ;;
+    *)
+        echo "usage: screenshot {region|full|window}" >&2
+        exit 2
+        ;;
+esac
+
+wl-copy < "$file"
+notify-send -a screenshot -i camera-photo "Screenshot saved" "$file"

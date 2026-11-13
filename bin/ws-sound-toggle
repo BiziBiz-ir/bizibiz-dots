@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# ws-sound-toggle — enable/disable the workspace "woop" sound.
+# Enabled = ws-sound daemon running; disabled = killed. Survives nothing
+# special: it re-reads state every call, safe to spam.
+
+set -u
+
+if pkill -f "ws-sound$" 2>/dev/null; then
+    # also reap the event listeners the daemon spawned
+    sleep 0.2; pkill -f "socket2[.]sock" 2>/dev/null
+    notify-send -a ws-sound -i audio-volume-high "Woop off" "workspace switch sound disabled"
+else
+    pkill -f "socket2[.]sock" 2>/dev/null   # clear strays before starting fresh
+    setsid ~/.local/bin/ws-sound >/dev/null 2>&1 < /dev/null &
+    sleep 0.3
+    if pgrep -f "ws-sound$" >/dev/null; then
+        notify-send -a ws-sound -i audio-volume-high "Woop on" "workspace switch sound enabled"
+    else
+        notify-send -a ws-sound -u critical "Woop failed" "could not start ws-sound"
+    fi
+fi
