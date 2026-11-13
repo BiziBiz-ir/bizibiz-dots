@@ -1,0 +1,125 @@
+# ─────────────────────────────────────────────
+# Dunst — matches the current waybar capsule theme:
+# surface #121216 at 94% opacity, radius 13, no
+# frame line; blue accents; amber kept for the
+# volume/brightness popups like in the bar.
+#
+# Palette
+#   bg0 #0a0a0c   bg1 #121216   bg2 #191920   bg3 #26262f
+#   fg  #d8d9de   dim  #85868f
+#   blue #125bc1  blue-dark #0c3a7a  blue-bright #3880e5
+#   amber #d97a2b amber-bright #f0a04b
+#   steel #6b8299 steel-bright #8aa7c2   olive #8ba36f
+# ─────────────────────────────────────────────
+
+[global]
+    monitor = 0
+    follow = mouse
+
+    width = (300, 340)
+    height = (100, 300)
+    origin = top-right
+    offset = (14, 10)
+    scale = 0
+
+    notification_limit = 5
+
+    progress_bar = true
+    progress_bar_height = 8
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 300
+    progress_bar_corner_radius = 4
+
+    indicate_hidden = yes
+    transparency = 6
+    separator_height = 2
+    padding = 14
+    horizontal_padding = 16
+    text_icon_padding = 0
+    frame_width = 0
+    gap_size = 10
+    corner_radius = 13
+    frame_color = "#3880e5"
+
+    separator_color = "#26262f"
+
+    sort = yes
+    idle_threshold = 120
+    font = JetBrains Mono 10
+    line_height = 0
+    markup = full
+    format = "<b>%s</b>\n%b"
+
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
+
+    icon_position = left
+    min_icon_size = 24
+    max_icon_size = 48
+    icon_path = /usr/share/icons/Adwaita/48x48/status:/usr/share/icons/Adwaita/48x48/devices:/usr/share/icons/Adwaita/48x48/apps:/usr/share/icons/hicolor/48x48/apps
+
+    word_wrap = yes
+
+    # Close the notification on click
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+[urgency_low]
+    background = "#121216"
+    foreground = "#85868f"
+    frame_color = "#3880e5"
+    timeout = 5
+
+[urgency_normal]
+    background = "#121216"
+    foreground = "#d8d9de"
+    frame_color = "#3880e5"
+    timeout = 8
+
+[urgency_critical]
+    background = "#191920"
+    foreground = "#3880e5"
+    frame_color = "#3880e5"
+    timeout = 0
+
+# ── Per-app accents ───────────────────────────
+
+[volume]
+    appname = "volume"
+    background = "#121216"
+    foreground = "#f0a04b"
+    frame_color = "#f0a04b"
+    timeout = 2
+
+[brightness]
+    appname = "brightness"
+    background = "#121216"
+    foreground = "#f0a04b"
+    frame_color = "#f0a04b"
+    timeout = 2
+
+[battery]
+    appname = "battery"
+    background = "#121216"
+    foreground = "#8ba36f"
+    frame_color = "#8ba36f"
+
+[bluetooth]
+    appname = "Bluetooth"
+    background = "#121216"
+    foreground = "#8aa7c2"
+    frame_color = "#8aa7c2"
+
+[playerctl]
+    appname = "playerctl"
+    background = "#121216"
+    foreground = "#d8d9de"
+    frame_color = "#8aa7c2"

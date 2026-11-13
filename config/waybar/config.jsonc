@@ -1,0 +1,141 @@
+{
+    "reload_style_on_change": true,
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "spacing": 0,
+
+    "modules-left": [
+        "hyprland/language",
+        "hyprland/window"
+    ],
+
+    "modules-center": [
+        "group/sys",
+        "hyprland/workspaces",
+        "group/media"
+    ],
+
+    "modules-right": [
+        "group/time",
+        "group/status"
+    ],
+
+    "group/sys": {
+        "orientation": "inherit",
+        "modules": ["cpu", "memory"]
+    },
+
+    "group/media": {
+        "orientation": "inherit",
+        "modules": ["custom/media"]
+    },
+
+    "group/time": {
+        "orientation": "inherit",
+        "modules": ["clock"]
+    },
+
+    "group/status": {
+        "orientation": "inherit",
+        "modules": ["idle_inhibitor", "backlight", "temperature", "network", "pulseaudio", "battery", "tray"]
+    },
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "on-click": "activate",
+        "persistent-workspaces": {
+            "*": 4
+        }
+    },
+
+    "hyprland/language": {
+        "format": "KB {short}",
+        "tooltip": false
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 24
+    },
+
+    "clock": {
+        "format": " {0:%H:%M} • {0:%a %d/%m}",
+        "tooltip": false
+    },
+
+    "custom/media": {
+        "exec": "~/.config/waybar/scripts/media.sh",
+        "exec-if": "playerctl status",
+        "interval": 2,
+        "format": "{}",
+        "max-length": 22,
+        "tooltip": false,
+        "on-click": "playerctl play-pause",
+        "on-scroll-up": "playerctl next",
+        "on-scroll-down": "playerctl previous"
+    },
+
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "start-activated": false,
+        "format-icons": {
+            "activated": "AWAKE",
+            "deactivated": "IDLE"
+        },
+        "tooltip-format-activated": "Caffeine on — idle lock/suspend disabled",
+        "tooltip-format-deactivated": "Caffeine off",
+        "on-click": "toggle"
+    },
+
+    "backlight": {
+        "format": "BRI {percent}%",
+        "interval": 2,
+        "on-scroll-up": "brightnessctl -e4 -n2 set 5%+",
+        "on-scroll-down": "brightnessctl -e4 -n2 set 5%-"
+    },
+
+    "temperature": {
+        "format": "TEMP {temperatureC}°C",
+        "critical-threshold": 85,
+        "interval": 5,
+        "tooltip-format": "{temperatureC}°C"
+    },
+
+    "cpu": {
+        "format": "CPU {usage}%",
+        "interval": 2
+    },
+
+    "memory": {
+        "format": "RAM {}%",
+        "interval": 5
+    },
+
+    "network": {
+        "format-wifi": "WIFI {signalStrength}%",
+        "format-ethernet": "ETH",
+        "format-disconnected": "OFFLINE",
+        "tooltip-format": "{ifname}: {ipaddr}"
+    },
+
+    "pulseaudio": {
+        "format": "VOL {volume}%",
+        "format-muted": "MUTED",
+        "scroll-step": 5,
+        "on-click": "pavucontrol"
+    },
+
+    "battery": {
+        "format": "BAT {capacity}%",
+        "format-charging": "CHG {capacity}%",
+        "states": {
+            "warning": 30,
+            "critical": 15
+        }
+    },
+
+    "tray": {
+        "spacing": 8
+    }
+}

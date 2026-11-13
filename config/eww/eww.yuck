@@ -1,0 +1,40 @@
+(defpoll clock-time :interval "5s" "date +'%H:%M'")
+(defpoll clock-date :interval "60s" "date +'%A, %d %B %Y'")
+(defpoll cpu :interval "3s" "~/.config/eww/scripts/cpu.sh")
+(defpoll memory :interval "5s" "free | awk '/Mem:/{printf \"%d\", $3/$2*100}'")
+(defpoll disk :interval "60s" "df / | awk 'NR==2{gsub(\"%\",\"\",$5); print $5}'")
+(defpoll battery :interval "60s" "cat /sys/class/power_supply/BAT0/capacity")
+(defpoll charging :interval "60s" "cat /sys/class/power_supply/BAT0/status")
+(defpoll nowplaying :interval "3s" "~/.config/eww/scripts/now.sh")
+(defpoll gh-contribs :interval "3600s" "~/.config/eww/scripts/gh-contribs.sh")
+(defpoll gh-cal-img :interval "3600s" "~/.config/eww/scripts/gh-calendar.sh")
+
+(defwidget stat [name value unit]
+  (box :class "stat" :orientation "v" :space-evenly false
+    (label :class "stat-val" :text "${value}${unit}")
+    (label :class "stat-name" :text name)))
+
+(defwidget desktop []
+  (box :class "hud" :orientation "v" :space-evenly false
+    (label :class "time" :text clock-time)
+    (label :class "date" :text clock-date)
+    (box :class "rule")
+    (box :class "stats" :orientation "h" :space-evenly true
+      (stat :name "CPU" :value cpu :unit "%")
+      (stat :name "RAM" :value memory :unit "%")
+      (stat :name "DISK" :value disk :unit "%")
+      (stat :name "BATTERY" :value battery :unit "%"))
+    (box :class "rule")
+    (box :class "now" :orientation "v"
+      (label :class "now-label" :text "NOW PLAYING")
+      (label :class "now-track" :text nowplaying :truncate true))
+    (box :class "gh" :orientation "v" :space-evenly false
+      (label :class "gh-label" :text "GITHUB")
+      (label :class "gh-val" :text "${gh-contribs} CONTRIBUTIONS IN THE LAST YEAR")
+      (image :path gh-cal-img :class "cal-img"))))
+
+(defwindow desktop
+  :monitor 0
+  :geometry (geometry :x "580px" :y "234px" :width "760px" :height "480px")
+  :stacking "bg"
+  (desktop))

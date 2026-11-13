@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# Bluetooth manager for Hyprland: bluetoothctl behind a wofi menu.
+# Power, scan/pair, connect, disconnect, forget. Loops until you close it.
+
+set -uo pipefail
+
+WOFI_ARGS=(--dmenu --prompt "Bluetooth" --width 620 --lines 14)
+
+notify() { notify-send -a Bluetooth -i bluetooth "$1" "${2:-}"; }
+
+adapter_powered() { bluetoothctl show 2>/dev/null | grep -qE '^\s*Powered: yes'; }
+is_connected()   { bluetoothctl info "$1" 2>/dev/null | grep -qE '^\s*Connected: yes'; }
+
+power_on() {
+    command -v rfkill >/dev/null && rfkill unblock bluetooth
+    bluetoothctl power on >/dev/null && notify "Bluetooth on"
+}
+
+power_off() {
+    bluetoothctl power off >/dev/null && notify "Bluetooth off"
+}
+
+connect_dev() {
+    local mac=$1 name=$2
+    bluetoothctl trust "$mac" >/dev/null 2>&1
+    notify "Connecting" "$name"
+    if bluetoothctl connect "$mac" 2>&1 | grep -qiE 'Connection successful|already connected'; then
+        notify "Connected" "$name"
+    else
+        notify "Connection failed" "$name"
+    fi
+}
+
+disconnect_dev() {
+    local mac=$1 name=$2
+    bluetoothctl disconnect "$mac" >/dev/null 2>&1 && notify "Disconnected" "$name"
+}
+
+pick_device() {  # $1 = header; prints "MAC<TAB>Name" for a paired device
+    local header=$1 mac name entry
+    local entries=() map=()
+    while read -r _ mac name; do
+        [[ -z ${mac:-} ]] && continue
+        entry="$name  ($mac)"
+        is_connected "$mac" && entry+=" — connected"
+        entries+=("$entry")
+        map+=("$mac"$'\t'"$name")
+    done < <(bluetoothctl devices Paired 2>/dev/null)
+    ((${#entries[@]})) || return 1
+
+    local choice idx=-1 i
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}" --prompt "$header") || return 1
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && return 1
+    printf '%s\n' "${map[idx]}"
+}
+
+scan_devices() {
+    notify "Scanning" "Looking for nearby devices…"
+    bluetoothctl --timeout 10 scan on >/dev/null 2>&1
+
+    local paired mac name entries=() map=()
+    paired=$(bluetoothctl devices Paired 2>/dev/null | awk '{print $2}')
+    while read -r _ mac name; do
+        [[ -z ${mac:-} ]] && continue
+        grep -qx "$mac" <<<"$paired" && continue
+        entries+=("$name  ($mac)"); map+=("$mac")
+    done < <(bluetoothctl devices 2>/dev/null)
+
+    if ((${#entries[@]} == 0)); then
+        notify "Scan finished" "No new devices found"
+        return
+    fi
+
+    local choice idx=-1 i
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}" --prompt "Pair new device") || return
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && return
+
+    local sel_mac=${map[idx]} sel_name=${choice%  (*}
+    notify "Pairing" "$sel_name"
+    if bluetoothctl pair "$sel_mac" 2>&1 | grep -qiE 'Pairing successful|already paired'; then
+        connect_dev "$sel_mac" "$sel_name"
+    else
+        notify "Pairing failed" "$sel_name"
+    fi
+}
+
+forget_device() {
+    local picked mac name
+    picked=$(pick_device "Forget device") || return
+    mac=${picked%%$'\t'*}
+    name=${picked#*$'\t'}
+    bluetoothctl remove "$mac" >/dev/null 2>&1 && notify "Removed" "$name"
+}
+
+while :; do
+    entries=() cmds=()
+
+    if adapter_powered; then
+        entries+=("   Turn Bluetooth off");  cmds+=("power off")
+        entries+=("   Scan for devices");    cmds+=("scan")
+
+        while read -r _ mac name; do
+            [[ -z ${mac:-} ]] && continue
+            if is_connected "$mac"; then
+                entries+=("   $name  ($mac) — connected"); cmds+=("disc $mac $name")
+            else
+                entries+=("   $name  ($mac)");             cmds+=("conn $mac $name")
+            fi
+        done < <(bluetoothctl devices Paired 2>/dev/null)
+
+        if ((${#entries[@]} == 2)); then
+            entries+=("   No paired devices yet — scan to add one"); cmds+=("noop")
+        fi
+        entries+=("   Forget a device");     cmds+=("forget")
+    else
+        entries+=("   Turn Bluetooth on");   cmds+=("power on")
+    fi
+    entries+=("   Close");                   cmds+=("exit")
+
+    choice=$(printf '%s\n' "${entries[@]}" | wofi "${WOFI_ARGS[@]}") || exit 0
+    [[ -z ${choice:-} ]] && exit 0
+
+    idx=-1
+    for i in "${!entries[@]}"; do
+        [[ ${entries[i]} == "$choice" ]] && idx=$i && break
+    done
+    ((idx < 0)) && continue
+
+    read -r action d_mac d_name <<<"${cmds[idx]}"
+    case $action in
+        power)  [[ $d_mac == on ]] && power_on || power_off ;;
+        scan)   scan_devices ;;
+        conn)   connect_dev "$d_mac" "$d_name" ;;
+        disc)   disconnect_dev "$d_mac" "$d_name" ;;
+        forget) forget_device ;;
+        exit)   exit 0 ;;
+        noop)   ;;
+    esac
+done

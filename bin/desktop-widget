@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Keeps the eww desktop HUD visible only while the active workspace is empty.
+# Self-healing: reconciles wanted vs actual state every second, so it recovers
+# if eww is restarted or a window opens/closes without an obvious event.
+
+set -u
+
+# Hyprland's exec-once environment does not include ~/.local/bin, so resolve
+# eww explicitly instead of trusting PATH.
+EWW=$(command -v eww || echo "$HOME/.local/bin/eww")
+
+while true; do
+    n=$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.windows // 0')
+    open=$("$EWW" active-windows 2>/dev/null | grep -c '^desktop')
+
+    if [[ $n == 0 && $open == 0 ]]; then
+        "$EWW" open desktop >/dev/null 2>&1
+    elif [[ $n != 0 && $open != 0 ]]; then
+        "$EWW" close desktop >/dev/null 2>&1
+    fi
+
+    sleep 1
+done

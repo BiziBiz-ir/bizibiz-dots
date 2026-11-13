@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# ws-sound — plays a short "woop" every time Hyprland switches workspace.
+# Listens on Hyprland's event socket (:2) so it catches every source of a
+# switch: keybinds, mouse wheel, wofi, hyprctl, scratchpad.
+
+set -u
+
+SOUND="${WS_SOUND:-$HOME/.local/share/sounds/woop.wav}"
+VOLUME="${WS_SOUND_VOLUME:-0.5}"
+
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+SOCK="$RUNTIME/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock"
+
+[[ -S $SOCK  ]] || { echo "ws-sound: no Hyprland socket at $SOCK" >&2; exit 1; }
+[[ -f $SOUND ]] || { echo "ws-sound: missing sound $SOUND" >&2; exit 1; }
+command -v pw-play >/dev/null || { echo "ws-sound: pw-play not found" >&2; exit 1; }
+
+last=0
+
+socat -U - "UNIX-CONNECT:$SOCK" | while read -r event; do
+    # "workspace>>4" on change; workspacev2 double-reports, so ignore it
+    [[ $event == workspace\>\>* ]] || continue
+
+    # debounce: rapid successive events (monitor moves, scripts) = one woop
+    now=$(date +%s%3N)
+    (( now - last < 150 )) && continue
+    last=$now
+
+    pw-play --volume "$VOLUME" "$SOUND" >/dev/null 2>&1 &
+done

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Screen brightness with a progress-bar OSD (dunst).
+#   brightness up       -> +5%
+#   brightness down     -> -5%
+#   brightness set 40%  -> absolute
+#   STEP=10 brightness up
+#
+# NB: needs write access to /sys/class/backlight/*/brightness, i.e. the
+# udev uaccess rule in /etc/udev/rules.d/99-backlight-uaccess.rules.
+
+set -uo pipefail
+
+step="${STEP:-5}"
+
+case "${1:-up}" in
+    up)   brightnessctl -q set "${step}%+" || exit 1 ;;
+    down) brightnessctl -q set "${step}%-" || exit 1 ;;
+    set)  brightnessctl -q set "${2:?usage: brightness set 40%}" || exit 1 ;;
+    *)    echo "usage: $0 {up|down|set <percent>}" >&2; exit 2 ;;
+esac
+
+pct=$(brightnessctl -m | awk -F, '{print $4}' | tr -d '%')
+
+# Same replace-id + tag, so rapid presses update one notification instead of
+# stacking.
+dunstify -a brightness -r 7413 -u low -t 1200 \
+    -h "int:value:${pct}" \
+    -h "string:x-dunst-stack-tag:brightness" \
+    "Brightness ${pct}%" 2>/dev/null || true

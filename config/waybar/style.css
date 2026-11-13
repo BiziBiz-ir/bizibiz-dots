@@ -1,0 +1,252 @@
+/* ─────────────────────────────────────────────
+   Waybar — V4.y geometry (minimal capsule bar),
+   Gotham blue palette.
+   Shape reference: github.com/atif-1402/minimal-waybar-themes → waybar/V4.y
+   Idea: one flush bar; everything inside it is an inset capsule.
+   ───────────────────────────────────────────── */
+
+@define-color bg0 #0a0a0c;
+@define-color bg1 #121216;
+@define-color bg2 #191920;
+@define-color bg3 #26262f;
+@define-color fg #d8d9de;
+@define-color dim #85868f;
+@define-color blue #125bc1;
+@define-color blue_dark #0c3a7a;
+@define-color blue_bright #3880e5;
+@define-color amber #d97a2b;
+@define-color amber_bright #f0a04b;
+@define-color steel #6b8299;
+@define-color steel_bright #8aa7c2;
+@define-color olive #8ba36f;
+
+* {
+    border: none;
+    border-radius: 1px;
+    min-height: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modules-left {
+    margin-left: 8px;
+}
+
+.modules-right {
+    margin-right: 8px;
+}
+
+window#waybar {
+    background: alpha(@bg1, 0.94);
+    border-radius: 0;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+window#waybar.empty #window {
+    background: transparent;
+    color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+#waybar.empty .modules-center {
+    opacity: 0;
+}
+
+/* ── Left: keyboard + window title card ─────── */
+
+#language {
+    color: @steel;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    padding: 0 8px;
+    margin: 4.5px 2px;
+    border-radius: 11px;
+    background: alpha(@fg, 0.10);
+}
+
+#window {
+    color: @fg;
+    font-weight: 800;
+    padding: 0 10px;
+    margin: 4.5px 2px;
+    border-radius: 14px;
+    background: alpha(@fg, 0.10);
+}
+
+/* ── Workspaces: capsule of dots/numbers ───── */
+
+#workspaces {
+    padding: 0 5px;
+    margin: 4.5px 2px;
+    border-radius: 11px;
+    background: alpha(@fg, 0.10);
+}
+
+#workspaces button {
+    color: @dim;
+    padding: 0 6px;
+    margin: 0 1.5px;
+    min-width: 9px;
+    background: transparent;
+    border-radius: 0;
+    transition: all 60ms ease-out;
+}
+
+#workspaces button.empty {
+    color: @fg;
+    opacity: 0.5;
+}
+
+#workspaces button:hover {
+    background: transparent;
+    color: @fg;
+}
+
+#workspaces button.active {
+    color: @bg0;
+    background: @blue_bright;
+    border-radius: 20px;
+    margin: 5px 5px;
+    padding: 0 8px;
+    opacity: 1;
+}
+
+#workspaces button.urgent {
+    color: @bg0;
+    background: @amber;
+    border-radius: 20px;
+    margin: 5px 5px;
+    padding: 0 8px;
+}
+
+/* ── Groups: one capsule per cluster ────────── */
+
+/* waybar names a group's GtkBox after the part following "group/" */
+#sys,
+#media,
+#time,
+#status {
+    background: alpha(@fg, 0.10);
+    border-radius: 13px;
+    padding: 0 6px;
+    margin: 4.5px 2px;
+    font-weight: 800;
+}
+
+/* ── Inside the capsules ───────────────────── */
+
+#cpu,
+#memory {
+    padding: 0 2px;
+}
+
+#cpu {
+    color: @steel_bright;
+}
+
+#memory {
+    color: @amber;
+}
+
+#clock {
+    color: @blue_bright;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 0 6px;
+}
+
+#custom-media {
+    color: @blue_bright;
+    padding: 0 6px;
+}
+
+#idle_inhibitor {
+    color: @dim;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-right: 2px;
+}
+
+#idle_inhibitor.activated {
+    color: @amber_bright;
+}
+
+#backlight {
+    color: @amber_bright;
+    margin-right: 9px;
+}
+
+#temperature {
+    color: @steel_bright;
+    margin-right: 9px;
+}
+
+#temperature.critical {
+    color: @blue_bright;
+}
+
+#network {
+    color: @olive;
+    margin-right: 9px;
+}
+
+#network.disconnected,
+#network.disabled {
+    color: @blue_bright;
+}
+
+#pulseaudio {
+    color: @fg;
+    margin-right: 9px;
+}
+
+#pulseaudio.muted {
+    color: @blue_bright;
+}
+
+#battery {
+    color: @olive;
+    margin-right: 4px;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: @amber;
+}
+
+#battery.warning:not(.charging) {
+    color: @amber_bright;
+}
+
+#battery.critical:not(.charging) {
+    color: @blue_bright;
+}
+
+#tray {
+    padding: 0 4px;
+    margin-right: 2px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+}
+
+/* ── Tooltip: flat top, rounded bottom ──────── */
+
+tooltip {
+    background: @bg1;
+    border: 1px solid alpha(@fg, 0.2);
+    border-radius: 4px 4px 11px 11px;
+}
+
+tooltip label {
+    color: @fg;
+    padding: 4px;
+}

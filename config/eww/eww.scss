@@ -1,0 +1,130 @@
+/* eww desktop HUD - same geometry language as the current waybar:
+   one dark surface, everything inside is an inset capsule.
+   Visible only on an empty workspace. */
+
+$bg0: #0a0a0c;
+$bg1: #121216;
+$bg2: #191920;
+$bg3: #26262f;
+$fg: #d8d9de;
+$dim: #85868f;
+$blue: #125bc1;
+$blue-bright: #3880e5;
+$amber: #d97a2b;
+$amber-bright: #f0a04b;
+$steel: #6b8299;
+$steel-bright: #8aa7c2;
+$olive: #8ba36f;
+
+* {
+  all: unset;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.hud {
+  /* fully opaque: any transparency lets bright wallpaper
+     texture hatch through the inset capsules */
+  background: rgba(18, 18, 22, 1);
+  border: none;
+  border-radius: 13px;
+  padding: 20px 24px;
+}
+
+.time {
+  font-size: 76px;
+  font-weight: 800;
+  color: $blue-bright;
+  letter-spacing: -2px;
+}
+
+.date {
+  font-size: 13px;
+  font-weight: 600;
+  color: $dim;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+/* the old hairlines have no equivalent in the bar - capsules do that job now */
+.rule {
+  min-height: 0;
+  background: transparent;
+  margin: 0;
+}
+
+.stats {
+  background: rgba(216, 217, 222, 0.10);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 14px 0 10px 0;
+}
+
+.stat {
+  min-width: 110px;
+}
+
+.stat-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: $fg;
+}
+
+.stat-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: $steel;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+.now {
+  background: rgba(216, 217, 222, 0.10);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-top: 4px;
+}
+
+.now-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: $amber;
+  letter-spacing: 1px;
+}
+
+.now-track {
+  font-size: 13px;
+  font-weight: 600;
+  color: $blue-bright;
+  margin-top: 3px;
+}
+
+.now-state {
+  font-size: 10px;
+  color: $dim;
+  margin-top: 2px;
+}
+
+.gh {
+  background: rgba(216, 217, 222, 0.10);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-top: 8px;
+}
+
+.gh-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: $steel;
+  letter-spacing: 1px;
+}
+
+.gh-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: $blue-bright;
+  margin-top: 3px;
+}
+
+.cal-img {
+  margin-top: 6px;
+}

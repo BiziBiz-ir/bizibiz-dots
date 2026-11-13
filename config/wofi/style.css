@@ -1,0 +1,84 @@
+/* ─────────────────────────────────────────────
+   Wofi — matches the current waybar capsule theme:
+   one dark surface (rgba(18,18,22,0.94), radius 13,
+   no border), everything inside is an inset capsule
+   rgba(216,217,222,0.10) radius 12; active = blue pill.
+   ───────────────────────────────────────────── */
+
+@define-color bg0 #0a0a0c;
+@define-color bg1 #121216;
+@define-color bg2 #191920;
+@define-color bg3 #26262f;
+@define-color fg #d8d9de;
+@define-color dim #85868f;
+@define-color blue #125bc1;
+@define-color blue_dark #0c3a7a;
+@define-color blue_bright #3880e5;
+@define-color amber #d97a2b;
+
+* {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    border: none;
+}
+
+/* the surface */
+window {
+    background-color: rgba(18, 18, 22, 0.94);
+    border-radius: 13px;
+    padding: 4px;
+}
+
+/* inset capsule */
+#input {
+    margin: 10px;
+    padding: 10px 12px;
+    color: @fg;
+    background-color: rgba(216, 217, 222, 0.10);
+    border-radius: 12px;
+    caret-color: @blue_bright;
+}
+
+#input:focus {
+    border: none;
+}
+
+#inner-box {
+    margin: 4px 10px;
+}
+
+#outer-box {
+    margin: 0;
+}
+
+#scroll {
+    margin: 0;
+}
+
+/* entries are quiet until selected, then they become the blue pill
+   — same rule as the active workspace button in the bar */
+#entry {
+    padding: 9px 10px;
+    margin: 2px 2px;
+    border-radius: 12px;
+    color: @dim;
+    background: transparent;
+}
+
+#entry:selected {
+    background-color: @blue_bright;
+    color: @bg0;
+}
+
+#text {
+    margin-left: 10px;
+}
+
+#text:selected {
+    color: @bg0;
+}
+
+#img {
+    margin-right: 10px;
+    border-radius: 6px;
+}
